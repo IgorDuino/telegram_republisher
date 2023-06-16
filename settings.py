@@ -1,5 +1,8 @@
 from decouple import config
+import hashlib
 
+secret_key = config("SECRET_KEY")
+secret_hash = hashlib.sha256(config("PASSWORD").encode()).hexdigest()
 api_id = config("API_ID", cast=int)
 api_hash = config("API_HASH")
 

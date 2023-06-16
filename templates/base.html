@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% endblock %}
+
+    <title>Telegram Republisher</title>
+</head>
+
+<body>
+    <section class="main">
+        {% block content %}
+        {% endblock %}
+    </section>
+
+    {% block footer %}
+    <footer>made by <a href="https://github.com/igorduino">igorduino</a></footer>
+    {% endblock %}
+
+    {% block scripts %}
+    {% endblock %}
+</body>
+
+</html>

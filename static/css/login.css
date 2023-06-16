@@ -1,0 +1,10 @@
+.flashes {
+    width: 100%;
+    z-index: 9999;
+}
+
+.flashes .error {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
