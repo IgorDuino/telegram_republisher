@@ -8,4 +8,5 @@ python-decouple
 tortoise-orm
 asyncpg
 aerich
+asgiref
 flask

@@ -1,31 +1,21 @@
-from tortoise import Tortoise, run_async
-
 import settings
 
-from multiprocessing import Process
+from tortoise import Tortoise
+
+from userbot import client
+
+from web import asgi_app
+import uvicorn
 
 
-def run_pyrogram():
-    import userbot
+async def start():
+    await Tortoise.init(settings.TORTOISE_ORM)
 
-
-def run_flask():
-    import web
+    await client.start()
+    config = uvicorn.Config("__main__:asgi_app", port=5000, log_level="info")
+    server = uvicorn.Server(config)
+    await server.serve()
 
 
 if __name__ == "__main__":
-    pyrogram_process = Process(target=run_pyrogram)
-    flask_process = Process(target=run_flask)
-
-    try:
-        pyrogram_process.start()
-        flask_process.start()
-
-        pyrogram_process.join()
-        flask_process.join()
-
-    except KeyboardInterrupt:
-        pyrogram_process.terminate()
-        flask_process.terminate()
-        pyrogram_process.join()
-        flask_process.join()
+    client.loop.run_until_complete(start())

@@ -25,12 +25,8 @@ class Filter(Model):
     is_active = fields.BooleanField(default=True)
     action = fields.CharEnumField(FilterAction, default=FilterAction.REPLACE)
     scope = fields.CharEnumField(FilterScope, default=FilterScope.RECIPIENT)
-    recipient_channel = fields.ForeignKeyField(
-        "models.RecipientChannel", related_name="filters", null=True
-    )
-    donor_channel = fields.ForeignKeyField(
-        "models.DonorChannel", related_name="filters", null=True
-    )
+    recipient_channel = fields.ForeignKeyField("models.RecipientChannel", related_name="filters", null=True)
+    donor_channel = fields.ForeignKeyField("models.DonorChannel", related_name="filters", null=True)
 
     def apply(self, text: str) -> str:
         if self.action != FilterAction.REPLACE:
@@ -79,9 +75,7 @@ class DonorChannel(Model):
     channel_id = fields.CharField(max_length=100)
     is_active = fields.BooleanField(default=True)
     filters = fields.ReverseRelation["Filter"]
-    recipient_channel = fields.ForeignKeyField(
-        "models.RecipientChannel", related_name="donor_channels"
-    )
+    recipient_channel = fields.ForeignKeyField("models.RecipientChannel", related_name="donor_channels")
 
     class Meta:
         table = "donor_channels"
@@ -95,12 +89,8 @@ class DonorChannel(Model):
 
 class Forwarding(Model):
     id = fields.IntField(pk=True)
-    recipient_channel = fields.ForeignKeyField(
-        "models.RecipientChannel", related_name="forwardings"
-    )
-    donor_channel = fields.ForeignKeyField(
-        "models.DonorChannel", related_name="forwardings"
-    )
+    recipient_channel = fields.ForeignKeyField("models.RecipientChannel", related_name="forwardings")
+    donor_channel = fields.ForeignKeyField("models.DonorChannel", related_name="forwardings")
     datetime = fields.DatetimeField(auto_now_add=True)
     original_message_id = fields.BigIntField()
     forwarded_message_id = fields.BigIntField()
