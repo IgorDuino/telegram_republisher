@@ -12,6 +12,20 @@ logger = logging.getLogger(__name__)
 client = tg.Client("artem", settings.api_id, settings.api_hash)
 
 
+async def get_admined_and_possible_donor_channels():
+    admined_channels: list[tg.types.Chat] = []
+    possible_donor_channels: list[tg.types.Chat] = []
+
+    async for channel in client.get_dialogs():
+        channel: tg.types.Dialog
+        if channel.chat.type == tg.enums.ChatType.CHANNEL:
+            possible_donor_channels.append(channel.chat)
+            if channel.chat.is_creator:
+                admined_channels.append(channel.chat)
+
+    return admined_channels, possible_donor_channels
+
+
 @client.on_message()
 async def handle_messages(client, message: tg.types.Message):
     logger.debug(f"Message from {message.chat.id} received")
@@ -70,13 +84,3 @@ async def copy_message(
             return new_message
 
         raise Exception("Unable to copy message")
-
-
-async def get_chanels():
-    chanels = []
-    async for dialog in client.get_dialogs():
-        dialog: tg.types.Dialog
-        if dialog.chat.type == tg.enums.ChatType.CHANNEL:
-            chanels.append(dialog.chat)
-
-    return chanels

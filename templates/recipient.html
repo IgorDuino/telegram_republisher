@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+{{ recipient}}
+<form action="{{ url_for('delete_recipient', id=recipient.id) }}" method="POST">
+    <input type="submit" value="Удалить">
+</form>
+<a href="{{ url_for('recipient_add_donor', id=recipient.id) }}">Добавить еще канал-донор</a>
+{% endblock content %}

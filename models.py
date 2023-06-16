@@ -75,7 +75,9 @@ class DonorChannel(Model):
     channel_id = fields.CharField(max_length=100)
     is_active = fields.BooleanField(default=True)
     filters = fields.ReverseRelation["Filter"]
-    recipient_channel = fields.ForeignKeyField("models.RecipientChannel", related_name="donor_channels")
+    recipient_channel = fields.ForeignKeyField(
+        "models.RecipientChannel", related_name="donor_channels", on_delete=fields.CASCADE
+    )
 
     class Meta:
         table = "donor_channels"
