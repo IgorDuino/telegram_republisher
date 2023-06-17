@@ -8,6 +8,7 @@ import logging
 from tortoise import Tortoise, run_async
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=settings.log_level)
 
 client = tg.Client("artem", settings.api_id, settings.api_hash)
 
@@ -29,6 +30,10 @@ async def get_admined_and_possible_donor_channels():
 @client.on_message()
 async def handle_messages(client, message: tg.types.Message):
     logger.debug(f"Message from {message.chat.id} received")
+    if message.chat.id == settings.my_id:
+        if message.text:
+            if message.text == "ping":
+                await message.reply_text("Pyrogram: pong")
     if message.chat.type == tg.enums.ChatType.CHANNEL:
         donor = await DonorChannel.get_or_none(channel_id=message.chat.id)
         if not donor:

@@ -12,7 +12,8 @@ async def start():
     await Tortoise.init(settings.TORTOISE_ORM)
 
     await client.start()
-    config = uvicorn.Config("__main__:asgi_app", port=5000, log_level="info", reload=settings.debug)
+    settings.my_id = (await client.get_me()).id
+    config = uvicorn.Config("__main__:asgi_app", host='0.0.0.0', port=5000, log_level=settings.log_level.lower())
     server = uvicorn.Server(config)
     await server.serve()
 

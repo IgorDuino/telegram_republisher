@@ -11,6 +11,11 @@ import settings
 import pyrogram as tg
 from userbot import client, get_admined_and_possible_donor_channels
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=settings.log_level)
 
 app = Flask(__name__)
 app.secret_key = settings.secret_key
