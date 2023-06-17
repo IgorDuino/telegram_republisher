@@ -1,25 +1,114 @@
 * {
   margin: 0;
-  padding: 0;
   box-sizing: border-box;
+
+  font-family: 'Roboto', sans-serif;
+  font-size: 18px;
 }
 
 body {
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   min-height: 100vh;
 }
 
-footer {
-  position: fixed;
-  bottom: 0;
+ul {
+  list-style: none;
+  padding: 0;
+}
 
+a {
+  text-decoration: none;
+  color: #5992d3;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-align: center;
+  color: black;
+}
+
+h1 {
+  font-size: 22px;
+}
+
+h2 {
+  font-size: 20px;
+}
+
+header {
+  position: fixed;
+  top: 0;
+  height: 60px;
   width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 100px;
+  padding-right: 100px;
+  margin-bottom: 60px;
+  border-bottom: 1.5px solid #afafaf;
+}
+
+@media (max-width: 600px) {
+  header {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+header a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  color: black;
+}
+
+.logo {
+  width: 180px;
 }
 
 .flashes {
-  width: 100%;
-  z-index: 9999;
+  position: fixed;
+  top: 60px;
+  margin-top: 10px;
+  margin-bottom: 30px;
+  width: 30%;
+  min-width: 300px;
+  text-align: center;
+}
+
+.flashes li {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  margin: 10px 0;
+}
+
+.flashes li:first-child {
+  margin-top: 0;
+}
+
+.flashes li .close {
+  float: right;
+  border: none;
+  align-self: flex-end;
+  background-color: transparent;
+  color: #646464;
+  font-size: 20px;
+  cursor: pointer;
 }
 
 .flashes .error {
@@ -44,4 +133,52 @@ footer {
   background-color: #fff3cd;
   border-color: #ffeeba;
   color: #856404;
+}
+
+footer {
+  position: fixed;
+  bottom: 10px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  height: 30px;
+  width: 100%;
+}
+
+section.main {
+  width: 80%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.add-form {
+  display: flex;
+  flex-direction: column;
+  margin-top: 25px;
+  width: 600px;
+}
+
+.add-form label {
+  margin-top: 7px;
+}
+
+form input,
+form textarea,
+form select {
+  margin: 5px 0;
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #afafaf;
+  background-color: transparent;
+}
+
+form input:focus,
+form textarea:focus,
+form select:focus {
+  outline: none;
+  border-color: #5992d3;
 }

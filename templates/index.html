@@ -6,41 +6,74 @@
 {% endblock %}
 
 {% block content %}
-{% for recipient in recipients %}
-<div class="recipient_card">
-    <div class="title">
-        <a href="{{ url_for('recipient_page', id=recipient.id) }}">
-            <h4>
-                [{{ recipient.id }}] {{ recipient.name }}
-            </h4>
-        </a>
-        <p class="id">
-            id: {{ recipient.channel_id}}
-        </p>
-    </div>
-    <div class="donoros">
-        <p class="donor_title">Каналы-доноры:</p>
-        <ul class="donors_list">
-            {% for donor in recipient.donor_channels %}
-            <li class="donor">
-                <a href="{{ url_for('donor_page', id=donor.id) }}" class="donor_link">
-                    {% if donor.name %}
-                    <p class="donor_name">{{donor.name}}</p>
-                    <p class="donor_id">{{donor.channel_id}}</p>
-                    {% else %}
-                    <p class="donor_name">{{donor.channel_id}}</p>
-                    {% endif %}
+<div class="wrapper">
+<div class="recipients">
+    <h2>Заполняемые каналы:</h2>
+    {% if recipients %}
+    <div class="cards recipient_cards">
+        {% for recipient in recipients %}
+        <div class="card recipient_card">
+            <div class="title">
+                <a href="{{ url_for('recipient_page', id=recipient.id) }}">
+                    [{{ recipient.id }}] {{ recipient.name }}
                 </a>
-            </li>
-            {% endfor %}
+                <p class="id">
+                    tgid: {{ recipient.channel_id}}
+                </p>
+            </div>
+            <div class="donoros">
+                <p class="donor_title">Каналы-доноры:</p>
+                <ul class="donors_list">
+                    {% for donor in recipient.donor_channels %}
+                    <li class="donor">
+                        <a href="{{ url_for('donor_page', id=donor.id) }}" class="donor_link">
+                            <p class="donor_name">{{donor.name}}</p>
+                        </a>
+                        <p class="id">
+                            tgid: {{donor.channel_id}}
+                        </p>
+                    </li>
+                    {% endfor %}
+            </div>
+            <div class="action_forms">
+                <form action="{{ url_for('toggle_recipient', id=recipient.id) }}" class="delete_form" method="POST">
+                    <input type="submit" value="{% if recipient.is_active %}Отключить{% else %}Включить{% endif %}">
+                </form>
+                <form action="{{ url_for('delete_recipient', id=recipient.id) }}" class="toggle_form" method="POST">
+                    <input type="submit" value="Удалить">
+                </form>
+            </div>
+        </div>
+        {% endfor %}
     </div>
-    <form action="{{ url_for('delete_recipient', id=recipient.id) }}" method="POST">
-        <input type="submit" value="Удалить">
-    </form>
+    {% else %}
+    <p>Нет заполняемых каналов</p>
+    {% endif %}
+    <a class="add_link add_channel" href="{{url_for('add_recipient_page')}}">Добавить канал</a>
 </div>
 
-{% endfor %}
+<div class="global_filters">
+    <h2>Глобальные фильтры:</h2>
+    {% if global_filters %}
+    <div class="cards filter_cards">
+        {% for filter in global_filters %}
+        <div class="card filter_card">
+            <div class="title">
+                <a href="{{ url_for('filter_page', id=filter.id) }}">
+                    [{{ filter.id }}] {{ filter.name }}
+                </a>
+            </div>
 
-<a class="add_channel" href="{{url_for('add_recipient_page')}}">Добавить канал</a>
-
+            <form action="{{ url_for('delete_filter', id=filter.id) }}" class="delete_form" method="POST">
+                <input type="submit" class="delete_btn delete_global_filter" value="Удалить">
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>Нет глобальных фильтров</p>
+    {% endif %}
+    <a class="add_link add_filter" href="{{url_for('add_filter_page')}}">Добавить фильтр</a>
+</div>
+</div>
 {% endblock %}

@@ -3,7 +3,7 @@ import hashlib
 
 from asgiref.wsgi import WsgiToAsgi
 
-from models import RecipientChannel, DonorChannel
+from models import RecipientChannel, DonorChannel, Filter, FilterScope, FilterAction
 from tortoise.query_utils import Prefetch
 
 import settings
@@ -41,8 +41,9 @@ def login_required(f):
 @app.route("/", methods=["GET"])
 @login_required
 async def index():
-    recipients = await RecipientChannel.all().prefetch_related("donor_channels")
-    return render_template("index.html", recipients=recipients)
+    recipients = await RecipientChannel.all().prefetch_related("donor_channels").order_by("-id")
+    global_filters = await Filter.filter(scope=FilterScope.GLOBAL).order_by("-id")
+    return render_template("index.html", recipients=recipients, global_filters=global_filters)
 
 
 @app.route("/login", methods=["GET"])
@@ -181,6 +182,25 @@ async def recipient_add_donor(id: int):
     return redirect(url_for("recipient_page", id=id))
 
 
+@app.route("/recipient/<int:id>/toggle", methods=["POST"])
+@login_required
+async def toggle_recipient(id: int):
+    recipient = await RecipientChannel.get_or_none(id=id)
+    if not recipient:
+        flash("Канал не найден", "error")
+        return redirect(url_for("index"))
+
+    recipient.is_active = not recipient.is_active
+    await recipient.save()
+
+    flash(
+        "Пересылка востановлена" if recipient.is_active else "Пересылка отключена",
+        "success" if recipient.is_active else "warning",
+    )
+
+    return redirect(url_for("index"))
+
+
 @app.route("/donor/<int:id>", methods=["GET"])
 @login_required
 async def donor_page(id: int):
@@ -213,4 +233,140 @@ async def delete_donor(id: int):
     await donor.delete()
 
     flash("Канал-донор успешно удален", "success")
+    return redirect(url_for("index"))
+
+
+@app.route("/donor/<int:id>/toggle", methods=["POST"])
+@login_required
+async def toggle_donor(id: int):
+    donor = await DonorChannel.get_or_none(id=id)
+    if not donor:
+        flash("Канал не найден", "error")
+        return redirect(url_for("index"))
+
+    donor.is_active = not donor.is_active
+    await donor.save()
+
+    flash(
+        "Пересылка востановлена" if donor.is_active else "Пересылка отключена",
+        "success" if donor.is_active else "warning",
+    )
+
+    return redirect(url_for("index"))
+
+
+@app.route("/filter/<int:id>", methods=["GET"])
+@login_required
+async def filter_page(id: int):
+    filter = await Filter.get_or_none(id=id)
+    if not filter:
+        flash("Фильтр не найден", "error")
+        return redirect(url_for("index"))
+
+    return render_template("filter.html", filter=filter)
+
+
+@app.route("/filter/<int:id>", methods=["DELETE"])
+@app.route("/filter/delete/<int:id>", methods=["POST"])
+@login_required
+async def delete_filter(id: int):
+    filter = await Filter.get_or_none(id=id)
+    if not filter:
+        flash("Фильтр не найден", "error")
+        return redirect(url_for("index"))
+
+    await filter.delete()
+    flash("Фильтр успешно удален", "success")
+    return redirect(url_for("index"))
+
+
+@app.route("/filter/add/", methods=["GET"])
+@login_required
+async def add_filter_page():
+    recipients = await RecipientChannel.all()
+    donors = await DonorChannel.all().prefetch_related("recipient_channel")
+
+    return render_template("add_filter.html", recipients=recipients, donors=donors)
+
+
+@app.route("/filter/add/", methods=["POST"])
+@login_required
+async def add_filter():
+    try:
+        scope = FilterScope(request.form.get("scope"))
+        action = FilterAction(request.form.get("action"))
+        pattern = request.form["pattern"]
+        replace_with = request.form.get("replace_with")
+        is_regex = (request.form.get("is_regex") in ["true", "1"]) if request.form.get("is_regex") else False
+
+    except (ValueError, TypeError):
+        flash("Данные некорректны или заполнены не все поля", "error")
+        return redirect(url_for("index"))
+
+    if scope == FilterScope.RECIPIENT:
+        recipient_id = request.form.get("recipient_id")
+        recipient = await RecipientChannel.get_or_none(id=recipient_id)
+        if not recipient:
+            flash("Канал-получатель не найден", "error")
+            return redirect(url_for("index"))
+
+        filter = await Filter.create(
+            scope=scope,
+            action=action,
+            pattern=pattern,
+            replace_with=replace_with,
+            is_regex=is_regex,
+            recipient_channel=recipient,
+        )
+
+        flash("Фильтр успешно добавлен", "success")
+        return redirect(url_for("recipient_page", id=recipient_id))
+
+    elif scope == FilterScope.DONOR:
+        donor_id = request.form.get("donor_id")
+        donor = await DonorChannel.get_or_none(id=donor_id)
+        if not donor:
+            flash("Канал-донор не найден", "error")
+            return redirect(url_for("index"))
+
+        filter = await Filter.create(
+            scope=scope,
+            action=action,
+            pattern=pattern,
+            replace_with=replace_with,
+            is_regex=is_regex,
+            donor_channel=donor,
+        )
+
+        flash("Фильтр успешно добавлен", "success")
+        return redirect(url_for("donor_page", id=donor_id))
+
+    filter = await Filter.create(
+        scope=scope,
+        action=action,
+        pattern=pattern,
+        replace_with=replace_with,
+        is_regex=is_regex,
+    )
+
+    flash("Фильтр успешно добавлен", "success")
+    return redirect(url_for("index"))
+
+
+@app.route("/filter/<int:id>/toggle", methods=["POST"])
+@login_required
+async def toggle_filter(id: int):
+    filter = await Filter.get_or_none(id=id)
+    if not filter:
+        flash("Фильтр не найден", "error")
+        return redirect(url_for("index"))
+
+    filter.is_active = not filter.is_active
+    await filter.save()
+
+    flash(
+        "Фильтр востановлен" if filter.is_active else "Фильтр отключен",
+        "success" if filter.is_active else "warning",
+    )
+
     return redirect(url_for("index"))

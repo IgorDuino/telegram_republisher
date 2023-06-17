@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Добавление дополнительного канала-донора для {{ recipient.name }}</h1>
-<form action="" method="POST">
+<h2>Добавление дополнительного канала-донора для {{ recipient.name }}</h2>
+<form action="" method="POST" class="add-form">
     <label for="donor">Откуда брать:</label>
     <select name="donor" required>
         <option value="">-- выберите канал-донор --</option>
