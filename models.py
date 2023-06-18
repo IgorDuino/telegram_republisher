@@ -34,17 +34,20 @@ class Filter(Model):
 
         if self.is_regex:
             import re
-
             return re.sub(self.pattern, self.replace_with, text)
 
         else:
             return text.replace(self.pattern, self.replace_with)
 
+    @classmethod
+    async def get_active_global_filters(cls):
+        return await Filter.filter(is_active=True, scope=FilterScope.GLOBAL).all()
+
     class Meta:
         table = "filters"
 
     def __str__(self):
-        return f"Filter [{self.id}] {self.name}: {'regex ' if self.is_regex else ''}{self.pattern[:20]} -> {self.replace_with[:20]}"
+        return f"Filter [{self.id}] {self.name}: {'regex ' if self.is_regex else ''}{self.pattern[:10]} -> {self.replace_with[:10]}"
 
     def __repr__(self):
         return f"Filter [{self.id}]"
@@ -58,6 +61,9 @@ class RecipientChannel(Model):
     max_forwarding_per_day = fields.IntField(default=0)  # 0 - unlimited
     filters = fields.ReverseRelation["Filter"]
     donor_channels = fields.ReverseRelation["DonorChannel"]
+
+    async def get_active_filters(self):
+        return await self.filters.filter(is_active=True).all()
 
     class Meta:
         table = "recipient_channels"
@@ -78,6 +84,9 @@ class DonorChannel(Model):
     recipient_channel = fields.ForeignKeyField(
         "models.RecipientChannel", related_name="donor_channels", on_delete=fields.CASCADE
     )
+
+    async def get_active_filters(self):
+        return await Filter.filter(donor_channel=self, is_active=True).all()
 
     class Meta:
         table = "donor_channels"

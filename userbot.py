@@ -1,11 +1,12 @@
 import pyrogram as tg
 import settings
 
-from models import DonorChannel, RecipientChannel, Filter, Forwarding, FilterScope
+from models import DonorChannel, RecipientChannel, Filter, Forwarding, FilterScope, FilterAction
 
 import logging
 
-from tortoise import Tortoise, run_async
+from tortoise import Tortoise
+
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=settings.log_level)
@@ -28,64 +29,90 @@ async def get_admined_and_possible_donor_channels():
 
 
 @client.on_message()
-async def handle_messages(client, message: tg.types.Message):
+async def handle_messages(client: tg.Client, message: tg.types.Message):
+
+    # download media to download folder
+    if message.media:
+        await client.download_media(message, file_name=f"downloads/{message.media._name_}")
+
     logger.debug(f"Message from {message.chat.id} received")
+
     if message.chat.id == settings.my_id:
         if message.text:
             if message.text == "ping":
                 await message.reply_text("Pyrogram: pong")
-    if message.chat.type == tg.enums.ChatType.CHANNEL:
-        donor = await DonorChannel.get_or_none(channel_id=message.chat.id)
-        if not donor:
-            return
-        recipient = await donor.recipient_channel
 
-        global_filters = await Filter.filter(scope=FilterScope.GLOBAL, is_active=True)
-        recipient_filters = await Filter.filter(
-            scope=FilterScope.RECIPIENT, is_active=True, recipient_channel=recipient
-        )
-        donor_filters = await Filter.filter(scope=FilterScope.DONOR, is_active=True, donor_channel=donor)
+    if message.chat.type != tg.enums.ChatType.CHANNEL:
+        return
 
-        message = apply_filters(message, global_filters + recipient_filters + donor_filters)
+    if not await DonorChannel.exists(channel_id=message.chat.id):
+        return
+
+    donors = await DonorChannel.filter(channel_id=message.chat.id, is_active=True).all()
+
+    global_filters = await Filter.get_active_global_filters()
+
+    for donor in donors:
+        recipient: RecipientChannel = await donor.recipient_channel
+        if not recipient.is_active:
+            continue
+
+        recipient_filters = await recipient.get_active_filters()
+        donor_filters = await donor.get_active_filters()
+
+        for filter in global_filters + recipient_filters + donor_filters:
+            filter: Filter
+            if filter.action == FilterAction.SKIP:
+                logger.info(f"Skipping message forwarding to {recipient} because of filter {filter}")
+                return
+
+            if filter.action == FilterAction.PAUSE:
+                if filter.scope == FilterScope.DONOR:
+                    logger.info(f"Pausing donor {donor} because of filter {filter}")
+                    await donor.update(is_active=False)
+                    return
+
+                logger.info(f"Pausing recipient {recipient} because of filter {filter}")
+                await recipient.update(is_active=False)
+                return
+
+            if message.text:
+                message.text = filter.apply(message.text)
+            if message.caption:
+                message.caption = filter.apply(message.caption)
+
+        # new_message = await client.copy_media_group(
+        #     chat_id=recipient.channel_id,
+        #     from_chat_id=message.chat.id,
+        #     message_id=message.id,
+        # )
 
         try:
-            new_message = await copy_message(message, donor.channel_id, recipient.channel_id)
-            await Forwarding.create(
-                donor_channel=donor,
-                recipient_channel=recipient,
-                original_message_id=message.id,
-                forwarded_message_id=new_message.id,
-            )
-        except Exception as e:
-            logger.error(e)
+            if message.media_group_id:
+                new_messages = await client.copy_media_group(
+                    chat_id=recipient.channel_id,
+                    from_chat_id=message.chat.id,
+                    message_id=message.id,
+                )
+            else:
+                new_message = await message.copy(recipient.channel_id)
+            logger.info(f"Message from {donor} copied to {recipient}")
 
+        except tg.errors.exceptions.forbidden_403.ChatWriteForbidden:
+            logger.warning(f"Chat {recipient.channel_id} does not allow forwards, trying to use send_message instead")
 
-def apply_filters(message: tg.types.Message, filters: list[Filter]):
-    for filter in filters:
-        if message.text:
-            message.text = filter.apply(message.text)
-        if message.caption:
-            message.caption = filter.apply(message.caption)
+            if message.text:
+                new_message = await client.send_message(recipient.channel_id, message.text)
 
-    return message
+                return new_message
 
+        if message.media_group_id:
+            for new_message in new_messages:
+                new_message: tg.types.Message
 
-async def copy_message(
-    message: tg.types.Message,
-    from_id: int,
-    to_id: str,
-) -> tg.types.Message:
-    try:
-        new_message = await message.copy(to_id)
-        logger.info(f"Message from {from_id} copied to {to_id}")
-        return new_message
-
-    except tg.errors.exceptions.bad_request_400.ChatForwardsRestricted:
-        logger.warning(f"Chat {to_id} does not allow forwards, trying to use send_message instead")
-
-        if message.text:
-            new_message = await client.send_message(to_id, message.text)
-
-            return new_message
-
-        raise Exception("Unable to copy message")
+                await Forwarding.create(
+                    donor_channel=donor,
+                    recipient_channel=recipient,
+                    original_message_id=message.id,
+                    forwarded_message_id=new_message.id,
+                )
