@@ -11,7 +11,7 @@ from tortoise import Tortoise
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=settings.log_level)
 
-client = tg.Client("artem", settings.api_id, settings.api_hash)
+client = tg.Client(settings.session_name, settings.api_id, settings.api_hash)
 
 
 async def get_admined_and_possible_donor_channels():
