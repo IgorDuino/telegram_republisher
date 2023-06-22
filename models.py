@@ -35,8 +35,8 @@ class Filter(Model):
     is_active = fields.BooleanField(default=True)
     action = fields.CharEnumField(FilterAction, default=FilterAction.REPLACE)
     scope = fields.CharEnumField(FilterScope, default=FilterScope.RECIPIENT)
-    recipient_channel = fields.ForeignKeyField("models.RecipientChannel", related_name="filters", null=True)
-    donor_channel = fields.ForeignKeyField("models.DonorChannel", related_name="filters", null=True)
+    recipient_channel = fields.ForeignKeyField("models.RecipientChannel", related_name="filters", null=True, on_delete=fields.CASCADE)
+    donor_channel = fields.ForeignKeyField("models.DonorChannel", related_name="filters", null=True, on_delete=fields.CASCADE)
 
     def check_on_text(self, text: str) -> bool:
         if self.is_regex:
