@@ -2,50 +2,56 @@
 
 {% block styles %}
 {{ super() }}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/add_filter.css') }}">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 {% endblock styles %}
 
 {% block content %}
 <h2>Добавление фильтра</h2>
 
 <form method="post" action="" class="add-form">
-    <input type="text" name="name" placeholder="Название фильтра">
-    <div>
-        <label for="is_regex">Regexp:</label>
-        <input type="checkbox" name="is_regex" value="0">
-    </div>
-    <label for="action">Тип действия фильтра:</label>
+    <input required type="text" name="name" placeholder="Название фильтра">
+    <label for="action">Действие:</label>
     <select name="action">
         <option value="">-- выбрать -- </option>
-        <option value="SKIP">Пропустить эту пересылку</option>
-        <option value="PAUSE">Приостановить всю пересылку в этот канал</option>
-        <option value="REPLACE">Заменить паттерн на замену</option>
+        <option value="SKIP">Пропустить</option>
+        <option value="PAUSE">Приостановить</option>
+        <option value="REPLACE">Заменить</option>
     </select>
-    <label for="scope">Область влияния фильтра:</label>
+    <label for="scope">Область влияния:</label>
     <select name="scope">
         <option value="">-- выбрать -- </option>
-        <option value="RECIPIENT">Во всех сообщениях для определенного канала-получателя</option>
-        <option value="DONOR">Во всех сообщениях из определенного канала-донора</option>
         <option value="GLOBAL">Везде</option>
+        <option value="RECIPIENT">Везде для канала-получателя</option>
+        <option value="DONOR">Для всего из канала-донора</option>
     </select>
-    <label for="recipient_id">Канал-получатель (только если область влияния - канал-получатель):</label>
+    <label for="recipient_id">Канал-получатель:</label>
     <select name="recipient_id">
         <option value="">-- выбрать -- </option>
         {% for recipient in recipients %}
         <option value="{{ recipient.id }}">{{ recipient.name }}</option>
         {% endfor %}
     </select>
-    <label for="donor_id">Канал-донор (только если область влияния - канал-донор):</label>
+    <label for="donor_id">Канал-донор:</label>
     <select name="donor_id">
         <option value="">-- выбрать -- </option>
         {% for donor in donors %}
         <option value="{{ donor.id }}">{{ donor.name  }} (для '{{ donor.recipient_channel.name }}')</option>
         {% endfor %}
     </select>
+
     <label for="pattern">Что искать:</label>
-    <input type="text" name="pattern" placeholder="паттерн">
+    <div>
+        <label for="is_regex">Регулярное выражение:</label>
+        <input type="checkbox" name="is_regex" value="0">
+    </div>
+    <input required type="text" name="pattern" placeholder="паттерн">
     <label for="replace_with">На что заменять (только если тип действия фильтра - замена):</label>
     <input type="text" name="replace_with" placeholder="замена">
     <input type="submit" value="Добавить">
 </form>
 {% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/add_filter.js') }}"></script>
+{% endblock scripts %}
