@@ -1,11 +1,20 @@
-import pyrogram as tg
 import settings
 
-from models import DonorChannel, RecipientChannel, Filter, Forwarding, FilterScope, FilterAction
+from models import (
+    DonorChannel,
+    RecipientChannel,
+    Filter,
+    Forwarding,
+    FilterScope,
+    FilterAction,
+)
 
 import logging
 
 from tortoise import Tortoise
+
+import pyrogram as tg
+from bypass_copying import bypass_copy
 
 
 logger = logging.getLogger(__name__)
@@ -30,11 +39,6 @@ async def get_admined_and_possible_donor_channels():
 
 @client.on_message()
 async def handle_messages(client: tg.Client, message: tg.types.Message):
-
-    # download media to download folder
-    if message.media:
-        await client.download_media(message, file_name=f"downloads/{message.media._name_}")
-
     logger.debug(f"Message from {message.chat.id} received")
 
     if message.chat.id == settings.my_id:
@@ -60,32 +64,41 @@ async def handle_messages(client: tg.Client, message: tg.types.Message):
         recipient_filters = await recipient.get_active_filters()
         donor_filters = await donor.get_active_filters()
 
+        should_skip = False
+
         for filter in global_filters + recipient_filters + donor_filters:
             filter: Filter
+            if not filter.check(message):
+                continue
+
             if filter.action == FilterAction.SKIP:
                 logger.info(f"Skipping message forwarding to {recipient} because of filter {filter}")
-                return
+                should_skip = True
+                break
 
             if filter.action == FilterAction.PAUSE:
                 if filter.scope == FilterScope.DONOR:
                     logger.info(f"Pausing donor {donor} because of filter {filter}")
                     await donor.update(is_active=False)
-                    return
+                    should_skip = True
+                    break
 
-                logger.info(f"Pausing recipient {recipient} because of filter {filter}")
-                await recipient.update(is_active=False)
-                return
+                elif filter.scope == FilterScope.RECIPIENT:
+                    logger.info(f"Pausing recipient {recipient} because of filter {filter}")
+                    await recipient.update(is_active=False)
+                    should_skip = True
+                    break
 
-            if message.text:
-                message.text = filter.apply(message.text)
-            if message.caption:
-                message.caption = filter.apply(message.caption)
+                elif filter.scope == FilterScope.GLOBAL:
+                    logger.info(f"Pausing all recipients because of filter {filter}")
+                    await RecipientChannel.filter(is_active=True).update(is_active=False)
+                    should_skip = True
+                    break
 
-        # new_message = await client.copy_media_group(
-        #     chat_id=recipient.channel_id,
-        #     from_chat_id=message.chat.id,
-        #     message_id=message.id,
-        # )
+            message = filter.apply(message)
+
+        if should_skip:
+            continue
 
         try:
             if message.media_group_id:
@@ -96,15 +109,13 @@ async def handle_messages(client: tg.Client, message: tg.types.Message):
                 )
             else:
                 new_message = await message.copy(recipient.channel_id)
+
             logger.info(f"Message from {donor} copied to {recipient}")
 
         except tg.errors.exceptions.forbidden_403.ChatWriteForbidden:
             logger.warning(f"Chat {recipient.channel_id} does not allow forwards, trying to use send_message instead")
 
-            if message.text:
-                new_message = await client.send_message(recipient.channel_id, message.text)
-
-                return new_message
+            new_message = await bypass_copy(message, donor.channel_id)
 
         if message.media_group_id:
             for new_message in new_messages:

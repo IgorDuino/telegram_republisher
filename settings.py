@@ -4,7 +4,7 @@ import hashlib
 secret_key = config("SECRET_KEY")
 debug = config("DEBUG", cast=bool)
 log_level = config("LOG_LEVEL", default="INFO")
-my_id = ''
+my_id = ""
 secret_hash = hashlib.sha256(config("PASSWORD").encode()).hexdigest()
 
 api_id = config("API_ID", cast=int)

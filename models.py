@@ -1,6 +1,8 @@
 from tortoise import fields
 from tortoise.models import Model
 
+import re
+
 from enum import Enum
 
 
@@ -28,12 +30,18 @@ class Filter(Model):
     recipient_channel = fields.ForeignKeyField("models.RecipientChannel", related_name="filters", null=True)
     donor_channel = fields.ForeignKeyField("models.DonorChannel", related_name="filters", null=True)
 
+    def check(self, text: str) -> bool:
+        if self.is_regex:
+            return re.search(self.pattern, text) is not None
+
+        else:
+            return self.pattern in text
+
     def apply(self, text: str) -> str:
         if self.action != FilterAction.REPLACE:
             raise Exception("Only REPLACE action is supported")
 
         if self.is_regex:
-            import re
             return re.sub(self.pattern, self.replace_with, text)
 
         else:

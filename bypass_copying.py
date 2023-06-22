@@ -8,18 +8,6 @@ from functools import partial
 log = logging.getLogger(__name__)
 
 
-async def substitute_file_id(client: Client, file_id: str, tmp_dir: str = "/tmp") -> Optional[str]:
-    """
-    Substitute a file ID with a new one by downloading the file and uploading it again.
-    """
-    file_path = await client.download_media(file_id, file_name=tmp_dir)
-
-    # Upload the file
-    new_file_id = await client.invoke(raw.functions.messages.UploadMedia())
-
-    return new_file_id
-
-
 async def bypass_copy(
     message: types.Message,
     chat_id: Union[int, str],
@@ -184,7 +172,7 @@ async def bypass_copy(
             #     disable_notification=disable_notification,
             #     schedule_date=schedule_date,
             # )
-        elif message.game: # Games are not supported for channels and chats, so I can do it later
+        elif message.game:  # Games are not supported for channels and chats, so I can do it later
             raise NotImplementedError("Games are not supported yet")
             # return await message._client.send_game(
             #     chat_id, game_short_name=message.game.short_name, disable_notification=disable_notification
