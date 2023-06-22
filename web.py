@@ -41,7 +41,9 @@ def login_required(f):
 @app.route("/", methods=["GET"])
 @login_required
 async def index():
-    recipients = await RecipientChannel.all().prefetch_related("donor_channels").order_by("-id")
+    recipients = await RecipientChannel.all().prefetch_related("filters").order_by("-id")
+    for recipient in recipients:
+        await recipient.fetch_related("donor_channels__filters")
     global_filters = await Filter.filter(scope=FilterScope.GLOBAL).order_by("-id")
     return render_template("index.html", recipients=recipients, global_filters=global_filters)
 

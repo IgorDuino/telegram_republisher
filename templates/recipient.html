@@ -2,8 +2,13 @@
 
 {% block content %}
 {{ recipient}}
-<form action="{{ url_for('delete_recipient', id=recipient.id) }}" method="POST">
-    <input type="submit" value="Удалить">
-</form>
+<div class="action_forms">
+    <form action="{{ url_for('toggle_recipient', id=recipient.id) }}" class="delete_form" method="POST">
+        <input type="submit" value="{% if recipient.is_active %}Отключить{% else %}Включить{% endif %}">
+    </form>
+    <form action="{{ url_for('delete_recipient', id=recipient.id) }}" class="toggle_form" method="POST">
+        <input type="submit" value="Удалить">
+    </form>
+</div>
 <a href="{{ url_for('recipient_add_donor', id=recipient.id) }}">Добавить еще канал-донор</a>
 {% endblock content %}

@@ -13,11 +13,17 @@ class FilterAction(str, Enum):
     PAUSE = "PAUSE"
     REPLACE = "REPLACE"
 
+    def __str__(self):
+        return self.value
+
 
 class FilterScope(str, Enum):
     GLOBAL = "GLOBAL"
     RECIPIENT = "RECIPIENT"
     DONOR = "DONOR"
+
+    def __str__(self):
+        return self.value
 
 
 class Filter(Model):
@@ -80,7 +86,7 @@ class Filter(Model):
         table = "filters"
 
     def __str__(self):
-        return f"Filter [{self.id}] {self.name}: {'regex ' if self.is_regex else ''}{self.pattern[:10]} -> {self.replace_with[:10]}"
+        return f"Filter [{self.id}] {self.name}: {'regex ' if self.is_regex else ''}'{self.pattern[:10]}' -> {self.replace_with[:10] if self.action == FilterAction.REPLACE else self.action}"
 
     def __repr__(self):
         return f"Filter [{self.id}]"

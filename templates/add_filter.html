@@ -16,12 +16,14 @@
     </div>
     <label for="action">Тип действия фильтра:</label>
     <select name="action">
+        <option value="">-- выбрать -- </option>
         <option value="SKIP">Пропустить эту пересылку</option>
         <option value="PAUSE">Приостановить всю пересылку в этот канал</option>
         <option value="REPLACE">Заменить паттерн на замену</option>
     </select>
     <label for="scope">Область влияния фильтра:</label>
     <select name="scope">
+        <option value="">-- выбрать -- </option>
         <option value="RECIPIENT">Во всех сообщениях для определенного канала-получателя</option>
         <option value="DONOR">Во всех сообщениях из определенного канала-донора</option>
         <option value="GLOBAL">Везде</option>
