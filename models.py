@@ -5,6 +5,8 @@ import re
 
 from enum import Enum
 
+from pyrogram.types import Message
+
 
 class FilterAction(str, Enum):
     SKIP = "SKIP"
@@ -37,7 +39,7 @@ class Filter(Model):
         else:
             return self.pattern in text
 
-    def apply(self, text: str) -> str:
+    def apply_on_text(self, text: str) -> str:
         if self.action != FilterAction.REPLACE:
             raise Exception("Only REPLACE action is supported")
 
@@ -46,6 +48,18 @@ class Filter(Model):
 
         else:
             return text.replace(self.pattern, self.replace_with)
+
+    def apply(self, msg: Message) -> Message:
+        if self.action != FilterAction.REPLACE:
+            raise Exception("Only REPLACE action is supported")
+
+        if msg.text:
+            msg.text = self.apply_on_text(msg.text)
+
+        if msg.caption:
+            msg.caption = self.apply_on_text(msg.caption)
+
+        return msg
 
     @classmethod
     async def get_active_global_filters(cls):

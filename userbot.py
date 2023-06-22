@@ -11,8 +11,6 @@ from models import (
 
 import logging
 
-from tortoise import Tortoise
-
 import pyrogram as tg
 from bypass_copying import bypass_copy
 
@@ -81,25 +79,24 @@ async def handle_messages(client: tg.Client, message: tg.types.Message):
                 if filter.scope == FilterScope.DONOR:
                     logger.info(f"Pausing donor {donor} because of filter {filter}")
                     await donor.update(is_active=False)
-                    should_skip = True
-                    break
 
                 elif filter.scope == FilterScope.RECIPIENT:
                     logger.info(f"Pausing recipient {recipient} because of filter {filter}")
                     await recipient.update(is_active=False)
-                    should_skip = True
-                    break
 
-                elif filter.scope == FilterScope.GLOBAL:
+                else:
                     logger.info(f"Pausing all recipients because of filter {filter}")
                     await RecipientChannel.filter(is_active=True).update(is_active=False)
-                    should_skip = True
-                    break
+
+                should_skip = True
+                break
 
             message = filter.apply(message)
 
         if should_skip:
             continue
+
+        new_messages = []
 
         try:
             if message.media_group_id:
@@ -109,22 +106,22 @@ async def handle_messages(client: tg.Client, message: tg.types.Message):
                     message_id=message.id,
                 )
             else:
-                new_message = await message.copy(recipient.channel_id)
-
-            logger.info(f"Message from {donor} copied to {recipient}")
+                new_messages = [await message.copy(recipient.channel_id)]
 
         except tg.errors.exceptions.forbidden_403.ChatWriteForbidden:
             logger.warning(f"Chat {recipient.channel_id} does not allow forwards, trying to use send_message instead")
 
-            new_message = await bypass_copy(message, donor.channel_id)
+            new_messages = [await bypass_copy(message, donor.channel_id)]
 
-        if message.media_group_id:
-            for new_message in new_messages:
-                new_message: tg.types.Message
+        if new_messages == []:
+            logger.warning(f"Message from {donor} was not copied to {recipient}")
 
-                await Forwarding.create(
-                    donor_channel=donor,
-                    recipient_channel=recipient,
-                    original_message_id=message.id,
-                    forwarded_message_id=new_message.id,
-                )
+        for new_message in new_messages:
+            logger.info(f"Message {message.id} from {donor} copied to {new_message.id} {recipient}")
+
+            await Forwarding.create(
+                donor_channel=donor,
+                recipient_channel=recipient,
+                original_message_id=message.id,
+                forwarded_message_id=new_message.id,
+            )
