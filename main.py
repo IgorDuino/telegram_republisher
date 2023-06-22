@@ -4,7 +4,7 @@ from tortoise import Tortoise
 
 from userbot import client
 
-from web import asgi_app
+from web.start import asgi_app
 import uvicorn
 
 
