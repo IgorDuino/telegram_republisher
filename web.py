@@ -297,6 +297,7 @@ async def add_filter():
         action = FilterAction(request.form.get("action"))
         pattern = request.form["pattern"]
         replace_with = request.form.get("replace_with")
+        name = request.form["name"]
         is_regex = (request.form.get("is_regex") in ["true", "1"]) if request.form.get("is_regex") else False
 
     except (ValueError, TypeError):
@@ -311,6 +312,7 @@ async def add_filter():
             return redirect(url_for("index"))
 
         filter = await Filter.create(
+            name=name,
             scope=scope,
             action=action,
             pattern=pattern,
@@ -330,6 +332,7 @@ async def add_filter():
             return redirect(url_for("index"))
 
         filter = await Filter.create(
+            name=name,
             scope=scope,
             action=action,
             pattern=pattern,
@@ -342,6 +345,7 @@ async def add_filter():
         return redirect(url_for("donor_page", id=donor_id))
 
     filter = await Filter.create(
+        name=name,
         scope=scope,
         action=action,
         pattern=pattern,

@@ -32,12 +32,23 @@ class Filter(Model):
     recipient_channel = fields.ForeignKeyField("models.RecipientChannel", related_name="filters", null=True)
     donor_channel = fields.ForeignKeyField("models.DonorChannel", related_name="filters", null=True)
 
-    def check(self, text: str) -> bool:
+    def check_on_text(self, text: str) -> bool:
         if self.is_regex:
             return re.search(self.pattern, text) is not None
 
         else:
             return self.pattern in text
+
+    def check(self, msg: Message) -> bool:
+        if msg.text:
+            if self.check_on_text(msg.text):
+                return True
+
+        if msg.caption:
+            if self.check_on_text(msg.caption):
+                return True
+
+        return False
 
     def apply_on_text(self, text: str) -> str:
         if self.action != FilterAction.REPLACE:
