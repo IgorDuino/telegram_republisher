@@ -45,6 +45,7 @@ async def handle_messages(client: tg.Client, message: tg.types.Message):
         if message.text:
             if message.text == "ping":
                 await message.reply_text("Pyrogram: pong")
+                return
 
     if message.chat.type != tg.enums.ChatType.CHANNEL:
         return
