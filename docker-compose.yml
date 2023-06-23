@@ -14,10 +14,8 @@ services:
   db:
     image: postgres
     restart: unless-stopped
-    environment:
-      POSTGRES_PASSWORD: ${DB_PASS}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_DB: ${DB_NAME}
+    env_file:
+      - prod.env
     volumes:
       - db-data:/var/lib/postgresql/data
 

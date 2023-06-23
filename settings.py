@@ -11,7 +11,7 @@ api_id = config("API_ID", cast=int)
 api_hash = config("API_HASH")
 session_name = config("SESSION_NAME")
 
-db_url = f"{config('DB_DRIVER')}://{config('DB_USER')}:{config('DB_PASS')}@{config('DB_HOST')}:{config('DB_PORT')}/{config('DB_NAME')}"
+db_url = f"postgres://{config('POSTGRES_USER')}:{config('POSTGRES_PASSWORD')}@{config('DB_HOST')}:{config('DB_PORT')}/{config('POSTGRES_DB')}"
 TORTOISE_ORM = {
     "connections": {"default": db_url},
     "apps": {
