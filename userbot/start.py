@@ -15,6 +15,8 @@ import pyrogram as tg
 from userbot.utils.bypass_copying import bypass_copy
 
 
+logging.getLogger("pyrogram").setLevel("WARNING")
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=settings.log_level)
 
@@ -96,8 +98,11 @@ async def handle_messages(client: tg.Client, message: tg.types.Message):
 
         except tg.errors.exceptions.bad_request_400.ChatForwardsRestricted:
             logger.warning(f"Chat {recipient.channel_id} does not allow forwards, trying to use send_message instead")
-
-            new_messages = [await bypass_copy(message, recipient.channel_id)]
+            try:
+                new_messages = await bypass_copy(message, recipient.channel_id)
+            except Exception as e:
+                logger.error(f"Failed to bypass copy: {e}")
+                return
 
         if new_messages == []:
             logger.warning(f"Message from {donor} was not copied to {recipient}")

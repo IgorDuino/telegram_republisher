@@ -4,7 +4,6 @@ from pyrogram import types, enums, Client, raw
 import logging
 from functools import partial
 
-
 log = logging.getLogger(__name__)
 
 
@@ -104,94 +103,87 @@ async def bypass_copy(
             reply_markup=message.reply_markup if reply_markup is object else reply_markup,
         )
     elif message.media:
-        send_media = partial(
-            message._client.send_cached_media,
-            chat_id=chat_id,
-            disable_notification=disable_notification,
-            reply_to_message_id=reply_to_message_id,
-            schedule_date=schedule_date,
-            protect_content=protect_content,
-            reply_markup=message.reply_markup if reply_markup is object else reply_markup,
-        )
+        new_message = None
+        caption = caption or message.caption
+
+        if message.
+
+        common_args = {
+            "caption": caption,
+            "parse_mode": parse_mode,
+            "caption_entities": caption_entities,
+            "disable_notification": disable_notification,
+            "reply_to_message_id": reply_to_message_id,
+            "schedule_date": schedule_date,
+            "protect_content": protect_content,
+            "reply_markup": message.reply_markup if reply_markup is object else reply_markup,
+        }
 
         if message.photo:
-            file_id = message.photo.file_id
+            photo = await message.download(in_memory=True)
+            new_message = await message._client.send_photo(chat_id, photo=photo, **common_args)
+            del photo
+
         elif message.audio:
-            file_id = message.audio.file_id
+            audio = await message.download(in_memory=True)
+            new_message = await message._client.send_audio(chat_id, audio=audio, **common_args)
+            del audio
+
         elif message.document:
-            file_id = message.document.file_id
+            document = await message.download(in_memory=True)
+            new_message = await message._client.send_document(chat_id, document=document, **common_args)
+            del document
+
         elif message.video:
-            file_id = message.video.file_id
-        elif message.animation:
-            file_id = message.animation.file_id
-        elif message.voice:
-            file_id = message.voice.file_id
-        elif message.sticker:  # works without reuploading
-            file_id = message.sticker.file_id
-        elif message.video_note:
-            file_id = message.video_note.file_id
-        elif message.contact:  # Unsupported yet
-            raise NotImplementedError("Polls are not supported yet")
-            # return await message._client.send_contact(
-            #     chat_id,
-            #     phone_number=message.contact.phone_number,
-            #     first_name=message.contact.first_name,
-            #     last_name=message.contact.last_name,
-            #     vcard=message.contact.vcard,
-            #     disable_notification=disable_notification,
-            #     schedule_date=schedule_date,
-            # )
-        elif message.location:  # Unsupported yet
-            raise NotImplementedError("Location are not supported yet")
-            # return await message._client.send_location(
-            #     chat_id,
-            #     latitude=message.location.latitude,
-            #     longitude=message.location.longitude,
-            #     disable_notification=disable_notification,
-            #     schedule_date=schedule_date,
-            # )
-        elif message.venue:  # Unsupported yet
-            raise NotImplementedError("Venue are not supported yet")
-            # return await message._client.send_venue(
-            #     chat_id,
-            #     latitude=message.venue.location.latitude,
-            #     longitude=message.venue.location.longitude,
-            #     title=message.venue.title,
-            #     address=message.venue.address,
-            #     foursquare_id=message.venue.foursquare_id,
-            #     foursquare_type=message.venue.foursquare_type,
-            #     disable_notification=disable_notification,
-            #     schedule_date=schedule_date,
-            # )
-        elif message.poll:  # Unsupported yet
-            raise NotImplementedError("Polls are not supported yet")
-            # return await message._client.send_poll(
-            #     chat_id,
-            #     question=message.poll.question,
-            #     options=[opt.text for opt in message.poll.options],
-            #     disable_notification=disable_notification,
-            #     schedule_date=schedule_date,
-            # )
-        elif message.game:  # Games are not supported for channels and chats, so I can do it later
-            raise NotImplementedError("Games are not supported yet")
-            # return await message._client.send_game(
-            #     chat_id, game_short_name=message.game.short_name, disable_notification=disable_notification
-            # )
-        else:
-            raise ValueError("Unknown media type")
-
-        # Sticker and VideoNote should have no caption
-        if message.sticker:
-            return await send_media(file_id=file_id)  # works without reuploading
-        elif message.video_note:
-            return await send_media(file_id=file_id)
-        else:
-            if caption is None:
-                caption = message.caption or ""
-                caption_entities = message.caption_entities
-
-            return await send_media(
-                file_id=file_id, caption=caption, parse_mode=parse_mode, caption_entities=caption_entities
+            video = await message.download(in_memory=True)
+            new_message = await message._client.send_video(
+                chat_id,
+                video=video,
+                duration=message.video.duration,
+                width=message.video.width,
+                height=message.video.height,
+                supports_streaming=message.video.supports_streaming,
+                **common_args,
             )
+            del video
+
+        elif message.animation:
+            animation = await message.download(in_memory=True)
+            new_message = await message._client.send_animation(
+                chat_id,
+                animation=animation,
+                duration=message.animation.duration,
+                width=message.animation.width,
+                height=message.animation.height,
+                **common_args,
+            )
+            del animation
+
+        elif message.voice:
+            voice = await message.download(in_memory=True)
+            new_message = await message._client.send_voice(chat_id, voice=voice, **common_args)
+            del voice
+
+        elif message.video_note:
+            video_note = await message.download(in_memory=True)
+            new_message = await message._client.send_video_note( # no caption for video notes
+                chat_id,
+                video_note=video_note,
+                duration=message.video_note.duration,
+                length=message.video_note.length,
+                disable_notification=disable_notification,
+                reply_to_message_id=reply_to_message_id,
+                schedule_date=schedule_date,
+                protect_content=protect_content,
+                reply_markup=message.reply_markup if reply_markup is object else reply_markup,
+            )
+            del video_note
+
+        if new_message:
+            return [new_message]
+
+        else:
+            raise ValueError("Unsupported media type.")
+
     else:
-        raise ValueError("Can't copy this message")
+        raise ValueError("Unsupported message type.")
