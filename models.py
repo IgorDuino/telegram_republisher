@@ -45,7 +45,7 @@ class Filter(Model):
 
     def check_on_text(self, text: str) -> bool:
         if self.is_regex:
-            return re.search(self.pattern, text, re.IGNORECASE if not self.is_case_sensitive else 0) is not None
+            return re.search(r'' + self.pattern, text, re.IGNORECASE) is not None
 
         else:
             if self.is_case_sensitive:
@@ -69,10 +69,13 @@ class Filter(Model):
             raise Exception("Only REPLACE action is supported")
 
         if self.is_regex:
-            return re.sub(self.pattern, self.replace_with, text)
+            print(self.pattern, self.replace_with, text)
+            return re.sub(r'' + self.pattern, self.replace_with, text)
 
         else:
-            return text.replace(self.pattern, self.replace_with)
+            if self.is_case_sensitive:            
+                return text.replace(self.pattern, self.replace_with)
+            return text.lower().replace(self.pattern.lower(), self.replace_with)
 
     def apply(self, msg: Message) -> Message:
         if self.action != FilterAction.REPLACE:
@@ -94,7 +97,7 @@ class Filter(Model):
         table = "filters"
 
     def __str__(self):
-        return f"Filter [{self.id}] {self.name}: {'regex ' if self.is_regex else ''}'{self.pattern[:10]}' -> {self.replace_with[:10] if self.action == FilterAction.REPLACE else self.action}"
+        return f"Filter {'case sens' if self.is_case_sensitive else ''} [{self.id}] {self.name}: {'regex ' if self.is_regex else ''}'{self.pattern[:10]}' -> {self.replace_with[:10] if self.action == FilterAction.REPLACE else self.action}"
 
     def __repr__(self):
         return f"Filter [{self.id}]"
