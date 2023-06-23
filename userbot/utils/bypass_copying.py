@@ -106,8 +106,6 @@ async def bypass_copy(
         new_message = None
         caption = caption or message.caption
 
-        if message.
-
         common_args = {
             "caption": caption,
             "parse_mode": parse_mode,
