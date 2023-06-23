@@ -2,7 +2,7 @@ import settings
 
 from tortoise import Tortoise
 
-from userbot import client
+from userbot.start import client
 
 from web.start import asgi_app
 import uvicorn

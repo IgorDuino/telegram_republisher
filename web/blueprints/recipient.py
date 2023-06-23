@@ -3,8 +3,9 @@ from flask import Blueprint, render_template, redirect, request, flash, url_for
 from models import RecipientChannel, DonorChannel
 
 from web.utils import login_required
-from userbot import client, get_admined_and_possible_donor_channels
+from userbot.utils.utils import get_admined_and_possible_donor_channels
 
+from userbot.start import client
 
 bp = Blueprint("recipient", __name__)
 
@@ -12,7 +13,7 @@ bp = Blueprint("recipient", __name__)
 @bp.route("/add_recipient", methods=["GET"])
 @login_required
 async def add_recipient_page():
-    admined_channels, possible_donor_channels = await get_admined_and_possible_donor_channels()
+    admined_channels, possible_donor_channels = await get_admined_and_possible_donor_channels(client)
 
     return render_template(
         "add_recipient.html",
@@ -87,7 +88,7 @@ async def recipient_add_donor(id: int):
         return redirect(url_for("index"))
 
     if request.method == "GET":
-        _, possible_donor_channels = await get_admined_and_possible_donor_channels()
+        _, possible_donor_channels = await get_admined_and_possible_donor_channels(client)
 
         return render_template(
             "add_donor.html",

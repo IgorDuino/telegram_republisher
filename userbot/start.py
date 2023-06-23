@@ -12,27 +12,13 @@ from models import (
 import logging
 
 import pyrogram as tg
-from bypass_copying import bypass_copy
+from userbot.utils.bypass_copying import bypass_copy
 
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=settings.log_level)
 
 client = tg.Client(settings.session_name, settings.api_id, settings.api_hash)
-
-
-async def get_admined_and_possible_donor_channels():
-    admined_channels: list[tg.types.Chat] = []
-    possible_donor_channels: list[tg.types.Chat] = []
-
-    async for channel in client.get_dialogs():
-        channel: tg.types.Dialog
-        if channel.chat.type == tg.enums.ChatType.CHANNEL:
-            possible_donor_channels.append(channel.chat)
-            if channel.chat.is_creator:
-                admined_channels.append(channel.chat)
-
-    return admined_channels, possible_donor_channels
 
 
 @client.on_message()
@@ -108,10 +94,10 @@ async def handle_messages(client: tg.Client, message: tg.types.Message):
             else:
                 new_messages = [await message.copy(recipient.channel_id)]
 
-        except tg.errors.exceptions.forbidden_403.ChatWriteForbidden:
+        except tg.errors.exceptions.bad_request_400.ChatForwardsRestricted:
             logger.warning(f"Chat {recipient.channel_id} does not allow forwards, trying to use send_message instead")
 
-            new_messages = [await bypass_copy(message, donor.channel_id)]
+            new_messages = [await bypass_copy(message, recipient.channel_id)]
 
         if new_messages == []:
             logger.warning(f"Message from {donor} was not copied to {recipient}")
