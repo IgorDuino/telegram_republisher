@@ -1,6 +1,9 @@
 import pyrogram as tg
-import settings
+from decouple import config
 
-client = tg.Client(settings.session_name, settings.api_id, settings.api_hash)
+api_id = config("API_ID", cast=int)
+api_hash = config("API_HASH")
+session_name = config("SESSION_NAME")
+client = tg.Client(session_name, api_id, api_hash)
 
 client.start()
