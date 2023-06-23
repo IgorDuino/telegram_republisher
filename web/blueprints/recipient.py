@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, redirect, request, flash, url_for
 from models import RecipientChannel, DonorChannel
 
 from web.utils import login_required
-from userbot.utils.utils import get_admined_and_possible_donor_channels
+from userbot.utils.utils import get_admined_and_possible_donor_channels, fill_channel
 
 from userbot.start import client
 
@@ -135,3 +135,29 @@ async def toggle_recipient(id: int):
     )
 
     return redirect(url_for("index"))
+
+
+@bp.route("/recipient/<int:id>/fill", methods=["POST"])
+@login_required
+async def fill_recipient(id: int):
+    try:
+        limit = int(request.form.get("limit"))
+    except ValueError:
+        flash("Неверный формат числа", "error")
+        return redirect(url_for("recipient.recipient_page", id=id))
+
+    recipient = await RecipientChannel.get_or_none(id=id)
+    if not recipient:
+        flash("Канал не найден", "error")
+        return redirect(url_for("index"))
+
+    await recipient.fetch_related("donor_channels")
+    donor = recipient.donor_channels[0]
+    if not donor:
+        flash("Канал-донор не найден", "error")
+        return redirect(url_for("recipient.recipient_page", id=id))
+
+    await fill_channel(client, donor.channel_id, recipient.channel_id, limit)
+
+    flash("Канал-получатель успешно заполнен", "success")
+    return redirect(url_for("recipient.recipient_page", id=id))

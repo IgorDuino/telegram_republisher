@@ -13,6 +13,7 @@ import logging
 
 import pyrogram as tg
 from userbot.utils.bypass_copying import bypass_copy
+from userbot.utils.utils import fill_channel
 
 
 logging.getLogger("pyrogram").setLevel("WARNING")
