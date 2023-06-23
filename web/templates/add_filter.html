@@ -11,14 +11,14 @@
 <form method="post" action="" class="add-form">
     <input required type="text" name="name" placeholder="Название фильтра">
     <label for="action">Действие:</label>
-    <select name="action">
+    <select name="action" required>
         <option value="">-- выбрать -- </option>
         <option value="SKIP">Пропустить</option>
         <option value="PAUSE">Приостановить</option>
         <option value="REPLACE">Заменить</option>
     </select>
     <label for="scope">Область влияния:</label>
-    <select name="scope">
+    <select name="scope" required>
         <option value="">-- выбрать -- </option>
         <option value="GLOBAL">Везде</option>
         <option value="RECIPIENT">Везде для канала-получателя</option>
