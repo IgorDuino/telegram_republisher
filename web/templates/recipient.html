@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+{{ recipient}}
+<div class="action_forms">
+    <form action="{{ url_for('recipient.toggle_recipient', id=recipient.id) }}" class="delete_form" method="POST">
+        <input type="submit" value="{% if recipient.is_active %}Отключить{% else %}Включить{% endif %}">
+    </form>
+    <form action="{{ url_for('recipient.delete_recipient', id=recipient.id) }}" class="toggle_form" method="POST">
+        <input type="submit" value="Удалить">
+    </form>
+</div>
+<a href="{{ url_for('recipient.recipient_add_donor', id=recipient.id) }}">Добавить еще канал-донор</a>
+
+<form action="{{ url_for('recipient.fill_recipient', id=recipient.id) }}" method="POST">
+    <input type="number" value='100' name="limit" placeholder="Лимит сообщений">
+    <input type="submit" value="Заполнить">
+</form>
+
+
+{% endblock content %}

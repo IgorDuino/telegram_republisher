@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="wrapper">
+    <div class="recipients">
+        <h2>Заполняемые каналы:</h2>
+        {% if recipients %}
+        <div class="cards recipient_cards">
+            {% for recipient in recipients %}
+            <div class="card recipient_card {% if not recipient.is_active %}disabled{% endif %}">
+                <div class="title">
+                    <a href="{{ url_for('recipient.recipient_page', id=recipient.id) }}">
+                        [{{ recipient.id }}] {{ recipient.name }}
+                    </a>
+                    <p class="id">
+                        tgid: {{ recipient.channel_id}}
+                    </p>
+                </div>
+                <div class="donoros">
+                    <p class="donor_title">Каналы-доноры:</p>
+                    <ul class="donors_list">
+                        {% for donor in recipient.donor_channels %}
+                        <li class="donor {% if not donor.is_active %}disabled{% endif %}">
+                            <a href="{{ url_for('donor.donor_page', id=donor.id) }}" class="donor_link">
+                                <p class="donor_name">{{donor.name}}</p>
+                            </a>
+                            <p class="id">
+                                tgid: {{donor.channel_id}}
+                            </p>
+                        </li>
+                        {% endfor %}
+                </div>
+                {% if recipient.filters  %}
+                <p>есть фильтры</p>
+                {% endif %}
+                <div class="action_forms">
+                    <form action="{{ url_for('recipient.toggle_recipient', id=recipient.id) }}" class="delete_form" method="POST">
+                        <input type="submit" value="{% if recipient.is_active %}Отключить{% else %}Включить{% endif %}">
+                    </form>
+                    <form action="{{ url_for('recipient.delete_recipient', id=recipient.id) }}" class="toggle_form" method="POST">
+                        <input type="submit" value="Удалить">
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p>Нет заполняемых каналов</p>
+        {% endif %}
+        <a class="add_link add_channel" href="{{url_for('recipient.add_recipient_page')}}">Добавить канал</a>
+    </div>
+
+    <div class="global_filters">
+        <h2>Глобальные фильтры:</h2>
+        {% if global_filters %}
+        <div class="cards filter_cards">
+            {% for filter in global_filters %}
+            <div class="card filter_card {% if not filter.is_active %}disabled{% endif %}">
+                <div class="title">
+                    <a href="{{ url_for('filter.filter_page', id=filter.id) }}">
+                        [{{ filter.id }}] {% if filter.name %}{{ filter.name }}{% else %}Без имени{% endif %}
+                    </a>
+                </div>
+
+                <p class="filter_pattern">
+                    Шаблон: {{ filter.pattern }}
+                </p>
+
+                <p class="filter_action">
+                    Действие:
+                    {% if filter.action == 'SKIP' %}
+                    Пропустить сообщение
+                    {% elif filter.action == 'PAUSE' %}
+                    Приостановить все пересылки
+                    {% elif filter.action == 'REPLACE' %}
+                    Заменить паттерн на `{{ filter.replace_with }}`
+                    {% endif %}
+                </p>
+
+                <div class="action_forms">
+                    <form action="{{ url_for('filter.toggle_filter', id=filter.id) }}" class="delete_form" method="POST">
+                        <input type="submit" value="{% if filter.is_active %}Отключить{% else %}Включить{% endif %}">
+                    </form>
+                    <form action="{{ url_for('filter.delete_filter', id=filter.id) }}" class="toggle_form" method="POST">
+                        <input type="submit" value="Удалить">
+                    </form>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p>Нет глобальных фильтров</p>
+        {% endif %}
+        <a class="add_link add_filter" href="{{url_for('filter.add_filter_page')}}">Добавить фильтр</a>
+    </div>
+</div>
+{% endblock %}

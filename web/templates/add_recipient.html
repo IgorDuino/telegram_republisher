@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Добавление правила</h2>
+<form action="" method="POST" class="add-form">
+    <label for="name">Название правила:</label>
+    <input type="text" name="name" placeholder="По умолчанию название канала">
+
+    <label for="recipient">Куда постить:</label>
+    <select name="recipient" required>
+        <option value="">-- выберите канал --</option>
+        {% for channel in admined_channels %}
+        <option value="{{ channel.id }}">{{ channel.title }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="donor">Откуда брать:</label>
+    <select name="donor" required>
+        <option value="">-- выберите канал-донор --</option>
+        {% for channel in possible_donor_channels %}
+        <option value="{{ channel.id }}">{{ channel.title }}</option>
+        {% endfor %}
+    </select>
+    <p>Позже можно будет добавить еще доноров</p>
+
+    <input type="submit" value="Добавить">
+</form>
+{% endblock %}

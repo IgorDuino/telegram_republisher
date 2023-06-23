@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+
+
+{% block content %}
+<h2>Для работы необходимо авторизоваться</h2>
+<form action="" method="post" class="login_form">
+    <input type="password" name="password" placeholder="пароль">
+    <input type="submit" value="Войти">
+</form>
+{% endblock %}

@@ -1,0 +1,13 @@
+pyrogram
+tgcrypto
+uvloop
+
+python-dotenv
+python-decouple
+
+tortoise-orm
+asyncpg
+aerich
+asgiref
+flask
+uvicorn
