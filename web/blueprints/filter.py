@@ -52,6 +52,9 @@ async def add_filter():
         replace_with = request.form.get("replace_with")
         name = request.form["name"]
         is_regex = (request.form.get("is_regex") in ["true", "1"]) if request.form.get("is_regex") else False
+        is_case_sensitive = (
+            (request.form.get("is_case_sensitive") in ["true", "1"]) if request.form.get("is_case_sensitive") else False
+        )
 
     except (ValueError, TypeError):
         flash("Данные некорректны или заполнены не все поля", "error")
@@ -71,6 +74,7 @@ async def add_filter():
             pattern=pattern,
             replace_with=replace_with,
             is_regex=is_regex,
+            is_case_sensitive=is_case_sensitive,
             recipient_channel=recipient,
         )
 
@@ -91,6 +95,7 @@ async def add_filter():
             pattern=pattern,
             replace_with=replace_with,
             is_regex=is_regex,
+            is_case_sensitive=is_case_sensitive,
             donor_channel=donor,
         )
 
@@ -104,6 +109,7 @@ async def add_filter():
         pattern=pattern,
         replace_with=replace_with,
         is_regex=is_regex,
+        is_case_sensitive=is_case_sensitive,
     )
 
     flash("Фильтр успешно добавлен", "success")

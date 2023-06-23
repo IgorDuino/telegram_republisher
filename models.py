@@ -30,6 +30,7 @@ class Filter(Model):
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=255)
     is_regex = fields.BooleanField(default=False)
+    is_case_sensitive = fields.BooleanField(default=False)
     pattern = fields.CharField(max_length=1000)
     replace_with = fields.CharField(max_length=1000, null=True)
     is_active = fields.BooleanField(default=True)
@@ -44,10 +45,13 @@ class Filter(Model):
 
     def check_on_text(self, text: str) -> bool:
         if self.is_regex:
-            return re.search(self.pattern, text) is not None
+            return re.search(self.pattern, text, re.IGNORECASE if not self.is_case_sensitive else 0) is not None
 
         else:
-            return self.pattern in text
+            if self.is_case_sensitive:
+                return self.pattern in text
+            else:
+                return self.pattern.lower() in text.lower()
 
     def check(self, msg: Message) -> bool:
         if msg.text:
