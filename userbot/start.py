@@ -11,6 +11,8 @@ from models import (
 
 import logging
 
+import datetime
+
 import pyrogram as tg
 from userbot.utils.bypass_copying import bypass_copy
 from userbot.utils.utils import fill_channel
@@ -51,6 +53,16 @@ async def handle_messages(client: tg.Client, message: tg.types.Message):
         recipient: RecipientChannel = await donor.recipient_channel
         if not recipient.is_active:
             continue
+
+        forwardings_count = await Forwarding.filter(
+            recipient_channel=recipient,
+            datetime__gte=datetime.datetime.now() - datetime.timedelta(days=1),
+        ).count()
+
+        scheduled_date_args = {}
+        if forwardings_count >= recipient.max_forwarding_per_day:
+            logger.info(f"Schedule forwarding to {recipient} because of max_forwarding_per_day")
+            scheduled_date_args["schedule_date"] = datetime.datetime.now() + datetime.timedelta(days=1)
 
         recipient_filters = await recipient.get_active_filters()
         donor_filters = await donor.get_active_filters()
@@ -96,14 +108,15 @@ async def handle_messages(client: tg.Client, message: tg.types.Message):
                     chat_id=recipient.channel_id,
                     from_chat_id=message.chat.id,
                     message_id=message.id,
+                    **scheduled_date_args,
                 )
             else:
-                new_messages = [await message.copy(recipient.channel_id)]
+                new_messages = [await message.copy(recipient.channel_id, **scheduled_date_args)]
 
         except tg.errors.exceptions.bad_request_400.ChatForwardsRestricted:
             logger.warning(f"Chat {recipient.channel_id} does not allow forwards, trying to use send_message instead")
             try:
-                new_messages = await bypass_copy(message, recipient.channel_id)
+                new_messages = await bypass_copy(message, recipient.channel_id, **scheduled_date_args)
             except Exception as e:
                 logger.error(f"Failed to bypass copy: {e}")
                 return

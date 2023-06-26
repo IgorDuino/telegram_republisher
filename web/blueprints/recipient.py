@@ -29,6 +29,10 @@ async def add_recipient():
         flash("Заполните все обязательные поля", "error")
         return redirect(url_for("recipient.add_recipient_page"))
 
+    if request.form.get("max_per_day") and request.form.get("max_per_day").isdigit():
+        max_per_day = int(request.form.get("max_per_day"))
+    else:
+        max_per_day = 0
     donor_id = request.form.get("donor")
     recipient_id = request.form.get("recipient")
     if request.form.get("name"):
@@ -46,7 +50,9 @@ async def add_recipient():
 
     donor_name = (await client.get_chat(donor_id)).title
 
-    recipient_channel = await RecipientChannel.create(channel_id=recipient_id, name=name)
+    recipient_channel = await RecipientChannel.create(
+        channel_id=recipient_id, name=name, max_forwarding_per_day=max_per_day
+    )
     donor_channel = await DonorChannel.create(channel_id=donor_id, name=donor_name, recipient_channel=recipient_channel)
 
     flash("Канал-получатель успешно добавлен", "success")
