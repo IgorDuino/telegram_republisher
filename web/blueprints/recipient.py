@@ -157,7 +157,7 @@ async def fill_recipient(id: int):
         flash("Канал-донор не найден", "error")
         return redirect(url_for("recipient.recipient_page", id=id))
 
-    await fill_channel(client, donor.channel_id, recipient.channel_id, limit)
+    await fill_channel(client, donor, recipient, limit)
 
     flash("Канал-получатель успешно заполнен", "success")
     return redirect(url_for("recipient.recipient_page", id=id))

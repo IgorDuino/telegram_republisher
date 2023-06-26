@@ -2,6 +2,7 @@ import asyncio
 import pyrogram as tg
 from userbot.utils.bypass_copying import bypass_copy
 import logging
+from models import DonorChannel, RecipientChannel, Filter, FilterScope, FilterAction
 
 
 logger = logging.getLogger(__name__)
@@ -21,13 +22,54 @@ async def get_admined_and_possible_donor_channels(client):
     return admined_channels, possible_donor_channels
 
 
-async def fill_channel(client: tg.Client, donor_id, recipient_id, limit):
+async def fill_channel(client: tg.Client, donor: DonorChannel, recipient: RecipientChannel, limit: int):
+    donor_id = donor.channel_id
+    recipient_id = recipient.channel_id
+    global_filters = await Filter.get_active_global_filters()
+
     history = []
     async for message in client.get_chat_history(donor_id, limit=limit):
         history.append(message)
     history = history[::-1]
     for message in history:
         message: tg.types.Message
+
+        recipient_filters = await recipient.get_active_filters()
+        donor_filters = await donor.get_active_filters()
+
+        should_skip = False
+
+        for filter in global_filters + recipient_filters + donor_filters:
+            filter: Filter
+            if not filter.check(message):
+                continue
+
+            if filter.action == FilterAction.SKIP:
+                logger.info(f"Skipping message forwarding to {recipient} because of filter {filter}")
+                should_skip = True
+                break
+
+            if filter.action == FilterAction.PAUSE:
+                if filter.scope == FilterScope.DONOR:
+                    logger.info(f"Pausing donor {donor} because of filter {filter}")
+                    await donor.update(is_active=False)
+
+                elif filter.scope == FilterScope.RECIPIENT:
+                    logger.info(f"Pausing recipient {recipient} because of filter {filter}")
+                    await recipient.update(is_active=False)
+
+                else:
+                    logger.info(f"Pausing all recipients because of filter {filter}")
+                    await RecipientChannel.filter(is_active=True).update(is_active=False)
+
+                should_skip = True
+                break
+
+            message = filter.apply(message)
+
+        if should_skip:
+            continue
+
         try:
             try:
                 if message.media_group_id:
