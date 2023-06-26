@@ -37,6 +37,9 @@ async def handle_messages(client: tg.Client, message: tg.types.Message):
     if message.chat.type != tg.enums.ChatType.CHANNEL:
         return
 
+    if message.service:
+        return
+
     if not await DonorChannel.exists(channel_id=message.chat.id):
         return
 
