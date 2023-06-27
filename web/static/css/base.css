@@ -174,7 +174,10 @@ form select {
   padding: 5px;
   border-radius: 5px;
   border: 1px solid #afafaf;
-  background-color: transparent;
+  background-color: white;
+  -webkit-appearance: none;
+  opacity: 1;
+  -webkit-text-fill-color: black;
 }
 
 form input:focus,

@@ -70,7 +70,7 @@ p.id {
 .action_forms form input {
   font-size: 14px;
   min-width: 70px;
-  background-color: transparent;
+  background-color: white;
 }
 
 .add_link {
