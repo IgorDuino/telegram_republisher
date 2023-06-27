@@ -60,7 +60,7 @@ async def handle_messages(client: tg.Client, message: tg.types.Message):
         ).count()
 
         scheduled_date_args = {}
-        if forwardings_count >= recipient.max_forwarding_per_day:
+        if forwardings_count >= recipient.max_forwarding_per_day and recipient.max_forwarding_per_day != 0:
             logger.info(f"Schedule forwarding to {recipient} because of max_forwarding_per_day")
             scheduled_date_args["schedule_date"] = datetime.datetime.now() + datetime.timedelta(days=1)
 

@@ -13,8 +13,8 @@
     <label for="action">Действие:</label>
     <select name="action" required>
         <option value="">-- выбрать -- </option>
-        <option value="SKIP">Пропустить</option>
-        <option value="PAUSE">Приостановить</option>
+        <option value="SKIP">Пропустить это сообщение</option>
+        <option value="PAUSE">Приостановить пересылку</option>
         <option value="REPLACE">Заменить</option>
     </select>
     <label for="scope">Область влияния:</label>
@@ -41,16 +41,16 @@
 
     <label for="pattern">Что искать:</label>
     <div>
-        <label for="is_regex">Регулярное выражение:</label>
-        <input type="checkbox" name="is_regex" value="0">
+        <label for="is_regex">Регулярное выражение (для сложных фильтров по почте и тд):</label>
+        <input type="checkbox" name="is_regex">
     </div>
     <div>
-        <label for="is_case_sensitive">Чувствительно к регистру:</label>
-        <input type="checkbox" name="is_case_sensitive" value="0">
+        <label for="is_case_sensitive">Чувствительно к регистру (если активно - ищет точное совпадение):</label>
+        <input type="checkbox" name="is_case_sensitive">
     </div>
-    <input required type="text" name="pattern" placeholder="паттерн">
-    <label for="replace_with">На что заменять (только если тип действия фильтра - замена):</label>
-    <input type="text" name="replace_with" placeholder="замена">
+    <input required type="text" name="pattern" placeholder="что искать">
+    <label for="replace_with">На что заменять:</label>
+    <input type="text" name="replace_with" placeholder="на что заменять">
     <input type="submit" value="Добавить">
 </form>
 {% endblock %}

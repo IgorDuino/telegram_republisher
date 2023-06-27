@@ -51,10 +51,11 @@ async def add_filter():
         pattern = request.form["pattern"]
         replace_with = request.form.get("replace_with")
         name = request.form["name"]
-        is_regex = (request.form.get("is_regex") in ["true", "1"]) if request.form.get("is_regex") else False
-        is_case_sensitive = (
-            (request.form.get("is_case_sensitive") in ["true", "1"]) if request.form.get("is_case_sensitive") else False
-        )
+        is_case_sensitive = is_regex = False
+        if request.form.get("is_case_sensitive") and request.form.get("is_case_sensitive")  == 'on':
+            is_case_sensitive = True
+        if request.form.get("is_regex") and request.form.get("is_regex") == 'on':
+            is_regex = True
 
     except (ValueError, TypeError):
         flash("Данные некорректны или заполнены не все поля", "error")
